@@ -1,12 +1,45 @@
+# Environment / Secrets
 .env
+.env.local
+.env.*.local
 
-# Python-generated files
+# Python cache & artifacts
 __pycache__/
-*.py[oc]
+*.py[co]
+*.pyo
+*.pyc
+*.pyd
+*.egg-info/
+*.egg
+*.whl
 build/
 dist/
 wheels/
-*.egg-info
+*.lock
 
 # Virtual environments
-.venv
+.venv/
+venv/
+env/
+
+# Airflow logs & DB
+logs/
+airflow.db
+*.db
+
+# dbt artifacts
+dbt/target/
+dbt/dbt_modules/
+dbt/.dbt/  # sometimes exists for profiles
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Docker
+docker-compose.override.yml
+*.log
