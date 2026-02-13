@@ -75,6 +75,8 @@ services:
   dbt:
     image: ghcr.io/dbt-labs/dbt-postgres:1.5.2
     working_dir: /usr/app/dbt
+    env_file:
+      - .env
     volumes:
       - ./dbt:/usr/app/dbt
     depends_on:
