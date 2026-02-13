@@ -3,7 +3,7 @@
 .env.local
 .env.*.local
 
-# Python cache & artifacts
+# Python and venvs
 __pycache__/
 *.py[co]
 *.pyo
@@ -16,21 +16,19 @@ build/
 dist/
 wheels/
 *.lock
-
-# Virtual environments
 .venv/
 venv/
 env/
-
-# Airflow logs & DB
+#airflow
 logs/
 airflow.db
 *.db
 
-# dbt artifacts
+# dbt 
+dbt/logs
 dbt/target/
 dbt/dbt_modules/
-dbt/.dbt/  # sometimes exists for profiles
+dbt/.dbt/ 
 
 # OS / Editor
 .DS_Store
