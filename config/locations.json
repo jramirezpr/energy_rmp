@@ -1,0 +1,9 @@
+[
+  {"name": "Vienna", "lat": 48.2082, "lon": 16.3738},
+  {"name": "Graz", "lat": 47.0707, "lon": 15.4395},
+  {"name": "Linz", "lat": 48.3069, "lon": 14.2858},
+  {"name": "Salzburg", "lat": 47.8095, "lon": 13.0550},
+  {"name": "Innsbruck", "lat": 47.2692, "lon": 11.4041},
+  {"name": "Klagenfurt", "lat": 46.6243, "lon": 14.3053},
+  {"name": "Villach", "lat": 46.6148, "lon": 13.8503}
+]

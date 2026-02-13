@@ -28,6 +28,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       AIRFLOW_DB: ${AIRFLOW_DB}
+      POSTGRES_DB: ${POSTGRES_DB} 
       _AIRFLOW_WWW_USER_CREATE: "true"
       _AIRFLOW_WWW_USER_USERNAME: "admin"
       _AIRFLOW_WWW_USER_PASSWORD: "admin"
@@ -41,6 +42,7 @@ services:
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./start-airflow-web.sh:/start-airflow-web.sh
+      - ./config:/opt/airflow/config  
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,12 +61,14 @@ services:
       AIRFLOW__CORE__FERNET_KEY: ${FERNET_KEY}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      AIRFLOW_DB: ${AIRFLOW_DB}   
+      AIRFLOW_DB: ${AIRFLOW_DB}
+      POSTGRES_DB: ${POSTGRES_DB}  
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - ./start-airflow-scheduler.sh:/start-airflow-scheduler.sh
+      - ./config:/opt/airflow/config  
     depends_on:
       postgres:
         condition: service_healthy
