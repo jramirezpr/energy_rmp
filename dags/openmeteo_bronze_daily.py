@@ -1,5 +1,4 @@
 import logging
-
 import json
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -41,13 +40,14 @@ with DAG(
     max_active_runs=1
 ) as dag:
 
-    def ingest_for_location(location, force_backfill=False):
+    def ingest_for_location(location, force_backfill=False, dag_run_id=None):  
         city_name = location.get("name")
         log_event("city_started", city=city_name)
 
         logger.info("Starting ingestion for location: %s", city_name)
-    
 
+        # Determine run_type
+        run_type = 'backfill' if force_backfill else 'initial'  
         today = date.today()
         conn = psycopg2.connect(
             host=os.environ.get('POSTGRES_HOST', 'postgres'),
@@ -58,19 +58,22 @@ with DAG(
         )
         cur = conn.cursor()
 
-        # Ensure table exists
+        # Ensure table exists with new schema
         cur.execute("""
             CREATE TABLE IF NOT EXISTS bronze_openmeteo_raw (
                 latitude FLOAT NOT NULL,
                 longitude FLOAT NOT NULL,
-                location_name TEXT,
+                location_name TEXT NOT NULL,
                 timezone TEXT,
-                start_dt DATE,
-                end_dt DATE,
+                start_dt DATE NOT NULL,
+                end_dt DATE NOT NULL,
                 hourly_json JSONB,
                 daily_json JSONB,
                 source TEXT NOT NULL,
-                ingestion_ts TIMESTAMP DEFAULT now()
+                upsert_ts TIMESTAMP NOT NULL DEFAULT now(),  
+                dag_run_id TEXT,                             
+                run_type TEXT,                                
+                PRIMARY KEY (location_name, start_dt, end_dt, source, upsert_ts)  
             );
         """)
 
@@ -84,7 +87,7 @@ with DAG(
                 FROM bronze_openmeteo_raw
                 WHERE location_name = %s AND source = 'openmeteo_historical'
                 """,
-                (location.get("name"),)
+                (city_name,)
             )
             last_end = cur.fetchone()[0]
             current = (last_end + timedelta(days=1)) if last_end else HIST_START
@@ -106,40 +109,44 @@ with DAG(
                 r.raise_for_status()
                 payload = r.json()
             except requests.RequestException as e:
-                logger.error("Error fetching %s: %s", location.get("name"), e)
+                logger.error("Error fetching %s: %s", city_name, e)
                 current = end_date + timedelta(days=1)
-                continue 
+                continue
 
             if not payload.get('hourly'):
-                logger.warning("No hourly data found for %s", location.get("name"))
+                logger.warning("No hourly data found for %s", city_name)
             if not payload.get('daily'):
-                logger.warning("No daily data found for %s", location.get("name"))
+                logger.warning("No daily data found for %s", city_name)
 
             try:
                 cur.execute(
                     """
                     INSERT INTO bronze_openmeteo_raw
-                    (latitude, longitude, location_name, timezone, start_dt, end_dt, hourly_json, daily_json, source)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (location_name, start_dt, end_dt, source) DO NOTHING;
+                    (latitude, longitude, location_name, timezone, start_dt, end_dt,
+                     hourly_json, daily_json, source, dag_run_id, run_type)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (location_name, start_dt, end_dt, source, upsert_ts)
+                    DO NOTHING; 
                     """,
                     (
                         location['lat'],
                         location['lon'],
-                        location.get('name'),
+                        city_name,
                         payload.get('timezone'),
                         start_date,
                         end_date,
                         json.dumps(payload.get('hourly', {})),
                         json.dumps(payload.get('daily', {})),
-                        'openmeteo_historical'
+                        'openmeteo_historical',
+                        dag_run_id, 
+                        run_type    
                     )
                 )
                 conn.commit()
             except Exception as e:
                 logger.error(
                     "DB insert failed for %s (%s - %s): %s",
-                    location.get("name"),
+                    city_name,
                     start_date,
                     end_date,
                     e
@@ -151,7 +158,6 @@ with DAG(
         cur.close()
         conn.close()
         log_event("city_complete", city=city_name)
-
 
     def run_ingest(**context):
         """Run ingestion for all locations in CONFIG_FILE"""
@@ -166,7 +172,6 @@ with DAG(
             locations = json.load(f)
 
         for loc in locations:
-            ingest_for_location(loc, force_backfill=force_backfill)
+            ingest_for_location(loc, force_backfill=force_backfill, dag_run_id=dag_run_id)
 
         log_event("ingestion_complete", dag_run_id=dag_run_id)
-
