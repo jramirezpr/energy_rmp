@@ -2,18 +2,21 @@
 set -e
 
 # Wait for Postgres to be ready
-until pg_isready -h postgres -p 5432; do
-  echo "Waiting for Postgres..."
+echo "Waiting for Postgres to be ready..."
+until pg_isready -h postgres -p 5432 -U "$POSTGRES_USER"; do
   sleep 2
 done
+echo "Postgres is ready."
 
-# Wait until Airflow metadata DB is initialized
-until airflow db check >/dev/null 2>&1; do
-  echo "Waiting for Airflow metadata DB to be ready..."
-  sleep 5
-done
+# Initialize Airflow metadata DB if needed
+echo "Checking Airflow metadata DB..."
+if ! airflow db check >/dev/null 2>&1; then
+  echo "Airflow metadata DB not initialized. Running 'airflow db init'..."
+  airflow db init
+else
+  echo "Airflow metadata DB already initialized."
+fi
 
-echo "Airflow DB is ready. Starting scheduler..."
-
-# Start scheduler
+# Start the Airflow scheduler
+echo "Starting Airflow scheduler..."
 exec airflow scheduler

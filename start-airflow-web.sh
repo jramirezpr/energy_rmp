@@ -2,21 +2,26 @@
 set -e
 
 # Wait for Postgres to be ready
-until pg_isready -h postgres -p 5432; do
-  echo "Waiting for Postgres..."
+echo "Waiting for Postgres..."
+until pg_isready -h postgres -p 5432 -U "$POSTGRES_USER"; do
   sleep 2
 done
+echo "Postgres is ready."
 
-# Initialize Airflow DB if not already initialized
+# Initialize Airflow metadata DB if needed
 if ! airflow db check >/dev/null 2>&1; then
   echo "Initializing Airflow metadata DB..."
   airflow db init
+else
+  echo "Airflow metadata DB already initialized."
 fi
 
 # Run migrations / upgrade DB
+echo "Upgrading Airflow metadata DB..."
 airflow db upgrade
 
-# Create admin user (ignore if exists)
+# Create admin user if not exists
+echo "Ensuring admin user exists..."
 airflow users create \
   --username admin \
   --firstname Admin \
@@ -25,7 +30,8 @@ airflow users create \
   --email admin@example.com \
   --password admin || true
 
-# Create Postgres connection (ignore if exists)
+# Create Postgres connection if not exists
+echo "Ensuring Postgres connection exists..."
 airflow connections add postgres_energy \
     --conn-type postgres \
     --conn-host ${POSTGRES_HOST:-postgres} \
@@ -35,9 +41,11 @@ airflow connections add postgres_energy \
     --conn-port 5432 || true
 
 # Optional: set minimal Airflow variables
+echo "Setting example Airflow variables..."
 airflow variables set example_var "Hello World" || true
 
 # Start webserver
+echo "Starting Airflow webserver..."
 exec airflow webserver
 
 
