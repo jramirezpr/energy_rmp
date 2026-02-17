@@ -41,20 +41,8 @@ with DAG(
         )
         cur = conn.cursor()
 
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS bronze_openmeteo_raw (
-                latitude FLOAT NOT NULL,
-                longitude FLOAT NOT NULL,
-                location_name TEXT,
-                timezone TEXT,
-                start_dt DATE,
-                end_dt DATE,
-                hourly_json JSONB,
-                daily_json JSONB,
-                source TEXT NOT NULL,
-                ingestion_ts TIMESTAMP DEFAULT now()
-            );
-        """)
+        cur.execute("SELECT 1 FROM bronze_openmeteo_raw LIMIT 1;")
+
 
         current = HIST_START
         while current <= today:
