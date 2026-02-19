@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: bronze
+    database: energy
+    schema: public
+    tables:
+      - name: bronze_openmeteo_raw
+        description: "Raw Open-Meteo historical data ingested by Airflow"
+        columns:
+          - name: location_name
+            description: "Human-readable location name (city)"
+            tests:
+              - not_null
+
+          - name: start_dt
+            description: "Start date of the ingested chunk"
+            tests:
+              - not_null
+
+          - name: end_dt
+            description: "End date of the ingested chunk"
+            tests:
+              - not_null
+
+          - name: source
+            description: "Data source identifier"
+            tests:
+              - not_null
+
+          - name: upsert_ts
+            description: "Timestamp when the row was ingested"
+            tests:
+              - not_null
