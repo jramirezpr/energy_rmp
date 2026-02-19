@@ -8,4 +8,4 @@ my_energy_project:
       password: "{{ env_var('POSTGRES_PASSWORD') }}"
       port: 5432
       dbname: energy
-      schema: bronze
+      schema: public
