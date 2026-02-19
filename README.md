@@ -2,6 +2,8 @@
 
 
 
+
+
 End-to-end data engineering and forecasting pipeline using Airflow, Postgres, dbt, and Python.
 
 This project is a demo which focuses on realistic data pipeline design: idempotent ingestion, backfills, schema validation, and reproducible transformations.
