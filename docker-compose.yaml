@@ -49,8 +49,8 @@ services:
     command: ["bash", "/start-airflow-web.sh"]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
-      interval: 5s
-      timeout: 5s
+      interval: 10s
+      timeout: 8s
       retries: 20
 
   airflow-scheduler:
