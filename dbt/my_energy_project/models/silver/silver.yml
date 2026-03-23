@@ -1,0 +1,25 @@
+version: 2
+
+
+models:
+  - name: silver_openmeteo
+    description: "Aggregated OpenMeteo weather data from bronze_openmeteo_raw"
+    config:
+      materialized: incremental
+      incremental_strategy: insert_overwrite
+      unique_key: "location_name,start_dt"
+    columns:
+      - name: location_name
+        description: "City or location identifier"
+        tests:
+          - not_null
+      - name: start_dt
+        description: "Start timestamp of the weather record"
+        tests:
+          - not_null
+      - name: temperature_2m
+        description: "2m temperature values"
+      - name: precipitation
+        description: "Precipitation values"
+      - name: windspeed_10m
+        description: "10m windspeed values"
